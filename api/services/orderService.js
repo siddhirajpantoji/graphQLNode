@@ -67,4 +67,36 @@ function createOrder(baseCurrency, quoteCurrency, baseAmount, senderId, benefici
 
     });
 }
-module.exports = { getSingleRecord, createOrder , getSingleRecordPromise }
+function getAllOrderPromise(id, status, senderId, beneficiaryId){
+    var order = {
+        id:id,
+        status:status,
+        beneficiaryId:beneficiaryId,
+        senderId:senderId
+    }
+    return new Promise(function(resolve,reject){
+        daoLayer.getAllOrderDetailsPromise(order).then(data =>{
+            resolve(data)
+        }).catch(err=>{
+            reject(err);
+        })
+    })
+}
+
+function getOrderCountPromise(id, status, senderId, beneficiaryId){
+    var order = {
+        id:id,
+        status:status,
+        beneficiaryId:beneficiaryId,
+        senderId:senderId
+    }
+    return new Promise(function(resolve,reject){
+        daoLayer.getAllOrderCountPromise(order).then(data =>{
+            resolve(data)
+        }).catch(err=>{
+            reject(err);
+        })
+    })
+}
+module.exports = { getSingleRecord, createOrder , getSingleRecordPromise,
+     getAllOrderPromise, getOrderCountPromise }

@@ -77,9 +77,6 @@ function getAllOrderDetails(order, callback) {
     });
 }
 
-function getAllOrderCount(orderId, callback) {
-
-}
 
 function createNewOrder(data, callback) {
     var queryToExecute = "INSERT INTO fixed_order (base_currency,base_amount,quote_currency,quote_amount,rate,sender_id, beneficiary_id,status,purpose,created_at)" +
@@ -119,14 +116,10 @@ function createStatusRecord(data, callback) {
     }
     );
 }
-
-function recordReturn(err, result, callback) {
-    if (err) {
-        logger.error("Error Found  While query :", err)
-    }
-    return callback(result.rows);
-}
-
+/**
+ * Promise of Returning Order History Details 
+ * @param {*} orderId 
+ */
 function getOrderHistoryDetailsPromise(orderId) {
     var query = "Select * from order_status where order_id = $1"
     return new Promise(function (resolve, reject) {
@@ -134,7 +127,10 @@ function getOrderHistoryDetailsPromise(orderId) {
             if (err) {
                 reject(err);
             }
-            resolve(data.rows);
+            else {
+                resolve(data.rows);
+            }
+            
         })
     })
 }
@@ -150,7 +146,10 @@ function createNewOrderPromise(data) {
                 logger.error("Error While Inserting ", err)
                 reject(err)
             }
-            resolve(data.rows[0]);
+            else{
+                resolve(data.rows[0]);
+            }
+            
         });
     })
 }
@@ -159,24 +158,105 @@ function createStatusRecordPromise(data) {
     var queryToExecute = "INSERT INTO order_status (status,order_id,created_at)" +
         " VALUES ($1, $2, $3 ) RETURNING *"
     var values = [data.status, data.order_id, data.created_at]
-    return new Promise(function(resolve,reject){
+    return new Promise(function (resolve, reject) {
         pool.query(queryToExecute, values, function (err, data) {
             if (err) {
                 logger.error("Error While Inserting Order Status", err)
                 reject(err)
             }
-            resolve(data.rows[0]);
+            else{
+                resolve(data.rows[0]);
+            }
+            
         }
         );
     });
- 
+
+}
+
+function getAllOrderDetailsPromise(order) {
+    var query = "Select * from fixed_order "
+    var valuesArr = new Array();
+    var queryArr = new Array();
+    var conditions = getQueryCondition(order);
+    if(conditions.valueArr.length >0)
+    {
+        query = query.concat(conditions.addQuery);
+        valuesArr = conditions.valueArr;
+    }
+    return new Promise(function(resolve,reject){
+        pool.query(query, valuesArr, function (err, result) {
+            if (err) {
+                logger.error("Error Found  While query :"+query+"Values"+valuesArr, err)
+                reject(err)
+            }
+            else{
+                resolve(result.rows);
+            }
+        });
+    }); 
+}
+function getAllOrderCountPromise(order) {
+    var query = "Select count(*)  from fixed_order "
+    var valuesArr = new Array();
+    var queryArr = new Array();
+    var conditions = getQueryCondition(order);
+    if(conditions.valueArr.length >0)
+    {
+        query = query.concat(conditions.addQuery);
+        valuesArr = conditions.valueArr;
+    }
+    return new Promise(function(resolve,reject){
+        pool.query(query, valuesArr, function (err, result) {
+            if (err) {
+                logger.error("Error Found  While query :"+query+"Values"+valuesArr, err)
+                reject(err)
+            }
+            else{
+                resolve(result.rows);
+            }
+        });
+    }); 
+}
+function getQueryCondition(order){
+    var queryArr = new Array();
+    var valuesArr = new Array();
+    var addQuery;
+    if (order.id) {
+        queryArr.push({ field: "id", value: order.id })
+    }
+
+    if (order.status) {
+        queryArr.push({ field: "status", value: order.status })
+    }
+
+    if (order.beneficiaryId) {
+        queryArr.push({ field: "beneficiary_id", value: order.beneficiaryId })
+    }
+
+    if (order.senderId) {
+        queryArr.push({ field: "sender_id", value: order.senderId })
+    }
+    if (queryArr.length > 0) {
+        addQuery = " where " + queryArr[0].field + " = $1"
+        valuesArr.push(queryArr[0].value)
+        for (var i = 1; i < queryArr.length; i++) {
+            addQuery= addQuery.concat(" and " + queryArr[i].field + " = $" + (i + 1))
+            valuesArr.push(queryArr[i].value)
+        }
+        
+    }
+    return {
+        "addQuery":addQuery,
+        "valueArr":valuesArr
+    }
 }
 module.exports = {
     getOrderHistoryDetails,
     getOrderDetails,
     getAllOrderDetails,
-    getAllOrderCount,
     createStatusRecord,
-    createHistoryRecord,
-    createNewOrder, getOrderHistoryDetailsPromise
+    createNewOrder,
+    getOrderHistoryDetailsPromise, createNewOrderPromise, createStatusRecordPromise,
+    getAllOrderDetailsPromise , getAllOrderCountPromise
 }

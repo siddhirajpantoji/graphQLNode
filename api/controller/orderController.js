@@ -9,21 +9,12 @@ function getSingleRecord(req, res, next) {
     {
         utils.Error400(req,res,"ID is compulsary")
     }
-    // service.getSingleRecordPromise(id).then(function(resullt){
-    //     logger.info("Inside then of Order "+JSON.stringify(result));
-    //     utils.SuccessfulPostData(req,res,result);
-    // }).catch(function(err){
-    //     logger.error("Iniside ", err);
-    //     utils.Error500(req,res,err);
-    // });
-    var singleORder = service.getSingleRecordPromise(id).then(abc => {
+    service.getSingleRecordPromise(id).then(abc => {
         utils.SuccessfulPostData(req,res,abc);    
     }).catch(err=> {
         utils.Error500(req,res,err);
     });
-  //  logger.error("Single Order"+JSON.stringify(singleORder))
-   // logger.info(result);
-   // utils.SuccessfulPostData(req,res,result);
+  
     // service.getSingleRecord(id, function(resullt){
     //     utils.SuccessfulPostData(req,res,resullt);
     // })
@@ -47,6 +38,33 @@ function createOrder(req, res, next) {
     // })
 }
 function filterAllRecords(req,res,next){
-    logg
+    logger.debug("Inisde filterAllRecords")
+    var data = {
+        id:req.body.id,
+        status:req.body.status,
+        senderId:req.body.senderId,
+        beneficiaryId:req.body.beneficiaryId
+    }
+    service.getAllOrderPromise(data.id,data.status, data.senderId, data.beneficiaryId).then(records =>{
+        utils.SuccessfulPostData(req,res,records);
+    }).catch(err=>{
+        utils.Error500(req,res,err)
+    })
 }
-module.exports = { getSingleRecord , createOrder}
+
+function countAllRecords(req,res,next){
+    logger.debug("Inisde filterAllRecords")
+    var data = {
+        id:req.body.id,
+        status:req.body.status,
+        senderId:req.body.senderId,
+        beneficiaryId:req.body.beneficiaryId
+    }
+    service.getOrderCountPromise(data.id,data.status, data.senderId, data.beneficiaryId).then(records =>{
+        utils.SuccessfulPostData(req,res,records);
+    }).catch(err=>{
+        logger.error("countAllRecords", err)
+        utils.Error500(req,res,err)
+    })
+}
+module.exports = { getSingleRecord , createOrder, filterAllRecords, countAllRecords }
