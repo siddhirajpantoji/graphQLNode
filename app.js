@@ -5,6 +5,10 @@ const bodyParser = require('body-parser')
 const logger = log4js.getLogger("app")
 const router = require('./api/routers/orderRouter')
 const utils = require('./api/utils/utils')
+const service = require('./api/services/orderService')
+var express_graphql = require('express-graphql');
+var { buildSchema } = require('graphql');
+
 app.use(bodyParser.urlencoded({
     extended: false
 }));
@@ -25,6 +29,50 @@ app.use((req, res, next) => {
 
 app.use('/order', router);
 
+var schema = buildSchema(`
+    type Order {
+        id: ID!
+        baseCurrency:String
+        quoteCurrency:String
+        baseAmount:Float
+        quoteAmount:Float
+        senderId:String
+        beneficiaryId:String
+        purpose:String
+        createdAt: String
+        updatedAt: String
+        rate:Float
+        status:String
+        history:[OrderStatus]
+    }
+    
+    type OrderStatus {
+        id: ID!
+        createdAt: String   
+        status:String
+    }
+    
+     type Query {
+        getOrdersBy(id:Int,status:String, senderId:String, beneficiaryId:String):[Order]
+        getOrderCount(id:Int,status:String, senderId:String, beneficiaryId:String):Int!
+    }
+    
+     type Mutation {
+        newOrder(baseCurrency:String!,quoteCurrency:String!, baseAmount:Float,senderId:String,beneficiaryId:String,purpose:String) : Order!
+        updateOrderStatus(id:Int!,status:String):Order
+    }`);
+  
+ var root = {
+    getOrdersBy:service.getAllOrderPromise,
+    getOrderCount:service.getOrderCountPromise,
+    newOrder:service.createOrderPromise,
+    updateOrderStatus:service.updateOrderPromise
+ }  
+ app.use('/graphql', express_graphql({
+    schema: schema,
+    rootValue: root,
+    graphiql: true
+})); 
 app.use((req, res, next) => {
     logger.error("Resource Not Found")
     const error = new Error('Resource not found!');
@@ -32,6 +80,7 @@ app.use((req, res, next) => {
     utils.Error400(req,res,error);
    // next(error);
 })
+
 
 app.use((error, req, res, next) => {
     
