@@ -56,29 +56,24 @@ function createOrder(baseCurrency, quoteCurrency, baseAmount, senderId, benefici
         daoLayer.createStatusRecord(orderStatus, function (result1) {
             newData.history = new Array();
             newData.history.push(result1);
-            var historyData = {
-                fixed_order_id: newData.id,
-                history_id: result1.id
-            }
-            daoLayer.createHistoryRecord(historyData, function (innerData) {
-                return callback(newData);
-            })
+            return callback(newData)
             //return callback(result);
         })
 
     });
 }
 function getAllOrderPromise(id, status, senderId, beneficiaryId) {
-    var order = {
+    var fixedorder = {
         id: id,
         status: status,
         beneficiaryId: beneficiaryId,
         senderId: senderId
     }
     return new Promise(function (resolve, reject) {
-        daoLayer.getAllOrderDetailsPromise(order).then(data => {
+        daoLayer.getAllOrderDetailsPromise(fixedorder).then(data => {
             if (data && data.length > 0) {
                 // Loop for getting history
+                logger.info("GOT Data ")
                 promises = data.map(single => {
                     return new Promise(function (resolve2, reject2) {
                         logger.info("Inside Order history Call ")

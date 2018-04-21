@@ -121,7 +121,8 @@ function createStatusRecord(data, callback) {
  * @param {*} orderId 
  */
 function getOrderHistoryDetailsPromise(orderId) {
-    var query = "Select * from order_status where order_id = $1"
+    var query = "Select id,status,created_at from order_status where order_id = $1"
+    logger.info("Got Inside ")
     return new Promise(function (resolve, reject) {
         pool.query(query, [orderId], function (err, data) {
             if (err) {
@@ -129,6 +130,7 @@ function getOrderHistoryDetailsPromise(orderId) {
             }
             else {
                // return data.rows;
+               logger.info("returning Data Rows"+data.rows)
                 resolve(data.rows);
             }
             

@@ -28,7 +28,6 @@ app.use((req, res, next) => {
 });
 
 app.use('/order', router);
-
 var schema = buildSchema(`
     type Order {
         id: ID!
@@ -61,29 +60,50 @@ var schema = buildSchema(`
         newOrder(baseCurrency:String!,quoteCurrency:String!, baseAmount:Float,senderId:String,beneficiaryId:String,purpose:String) : Order!
         updateOrderStatus(id:Int!,status:String):Order
     }`);
-  
- var root = {
-    getOrdersBy:service.getAllOrderPromise,
-    getOrderCount:service.getOrderCountPromise,
-    newOrder:service.createOrderPromise,
-    updateOrderStatus:service.updateOrderPromise
- }  
- app.use('/graphql', express_graphql({
+
+
+
+var root = {
+    getOrdersBy: function (args) {
+        console.log(args)
+        service.getAllOrderPromise(args.id, args.status, args.senderId, args.beneficiaryId).then(result => {
+            logger.info("Result ")
+            return result;
+        }).catch(err => {
+            throw err;
+            // return err;
+        })
+
+    },
+    getOrderCount: function (args) {
+        console.log(args)
+        return null;
+    },
+    newOrder: function (args) {
+        console.log(args)
+        return null;
+    },
+    updateOrderStatus: function (args) {
+        console.log(args)
+        return null;
+    }
+}
+app.use('/graphql', express_graphql({
     schema: schema,
     rootValue: root,
     graphiql: true
-})); 
+}));
 app.use((req, res, next) => {
     logger.error("Resource Not Found")
     const error = new Error('Resource not found!');
     error.status = 404;
-    utils.Error400(req,res,error);
-   // next(error);
+    utils.Error400(req, res, error);
+    // next(error);
 })
 
 
 app.use((error, req, res, next) => {
-    
+
     logger.error("Exception occured in Global ", error)
     // res.status(error.status || 500);
     // res.json({
@@ -91,7 +111,7 @@ app.use((error, req, res, next) => {
     //         message: error.message
     //     }
     // });
-    utils.Error500(req,res,error);
+    utils.Error500(req, res, error);
 })
 
 module.exports = app;
