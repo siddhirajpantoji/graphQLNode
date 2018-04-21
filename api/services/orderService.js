@@ -208,13 +208,7 @@ async function getAllOrderSync(id, status, senderId, beneficiaryId) {
         for (i = 0; i < result.length; i++) {
             var single = utils.convertResultSetToObject(result[i]);
             var history = await syncDao.getHistoryDetailsForOrder(single.id)
-            if (history && history.length > 0) {
-                var histArr = new Array();
-                for ( j = 0; j < history.length; j++ ) {
-                    histArr.push(utils.convertToHistoryObject(history[j]))
-                }
-                single.history = histArr;       
-            }
+            single.history = utils.convertToHistoryArr(history);
             output.push(single)
         }
         return output;
@@ -225,8 +219,66 @@ async function getAllOrderSync(id, status, senderId, beneficiaryId) {
     }
 }
 
+async function createOrderSync(baseCurrency, quoteCurrency, baseAmount, senderId, beneficiaryId, purpose) {
+    var newData = {
+        base_currency: baseCurrency,
+        base_amount: baseAmount,
+        quote_currency: quoteCurrency,
+        quote_amount: (baseAmount * rate),
+        rate: rate,
+        sender_id: senderId,
+        beneficiary_id: beneficiaryId,
+        status: "CREATED",
+        purpose: purpose,
+        created_at: new Date()
+    }
+    var order = await syncDao.createOrder(newData);
+    order = utils.convertResultSetToObject(order);
+    var orderStatus = {
+        status: order.status,
+        order_id: order.id,
+        created_at: new Date()
+    }
+    var history = await syncDao.createStatusRecord(orderStatus)
+    history = utils.convertToHistoryObject(history)
+    var histArr = new Array();
+    histArr.push(history)
+    order.history = histArr;
+    return order;
+}
+async function getAllOrderCountSync(id, status, senderId, beneficiaryId) {
+    var order = {
+        id: id,
+        status: status,
+        beneficiaryId: beneficiaryId,
+        senderId: senderId
+    }
+    var result = await syncDao.getCountOfOrders(order)
+    logger.info(result)
+    return result[0].count;
+}
+
+async function updateOrderSync(id, status) {
+    var order = {
+        id: id,
+        status: status
+    }
+    var result = await syncDao.updateOrderStatus(order)
+    
+    var order1 = utils.convertResultSetToObject(result)
+    var orderStatus = {
+        status: order1.status,
+        order_id: order1.id,
+        created_at: new Date()
+    }
+    var history = await syncDao.createStatusRecord(orderStatus)
+    history = await syncDao.getHistoryDetailsForOrder(order1.id)
+    order1.history = history;
+    //logger.info(result)
+    return order1;
+}
 module.exports = {
     getSingleRecord, createOrder, getSingleRecordPromise,
     getAllOrderPromise, getOrderCountPromise, createOrderPromise, updateOrderPromise,
-    getAllOrderSync
+    getAllOrderSync, createOrderSync , getAllOrderCountSync, updateOrderSync
 }

@@ -65,28 +65,18 @@ var schema = buildSchema(`
 
 var root = {
     getOrdersBy: function (args) {
-        console.log(args)
+        
         return  service.getAllOrderSync(args.id, args.status, args.senderId, args.beneficiaryId);
-        // service.getAllOrderPromise(args.id, args.status, args.senderId, args.beneficiaryId).then(result => {
-        //     logger.info("Result ")
-        //     return result;
-        // }).catch(err => {
-        //     throw err;
-        //     // return err;
-        // })
-
     },
     getOrderCount: function (args) {
-        console.log(args)
-        return null;
+        return service.getAllOrderCountSync(args.id, args.status, args.senderId, args.beneficiaryId);
     },
     newOrder: function (args) {
-        console.log(args)
-        return null;
+        
+        return service.createOrderSync(args.baseCurrency, args.quoteCurrency, args.baseAmount, args.senderId, args.beneficiaryId, args.purpose);
     },
     updateOrderStatus: function (args) {
-        console.log(args)
-        return null;
+        return service.updateOrderSync(args.id,args.status);
     }
 }
 app.use('/graphql', express_graphql({

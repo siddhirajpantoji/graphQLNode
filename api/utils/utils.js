@@ -1,5 +1,5 @@
 const messages = require('../constants/constants')
-exports.SuccessfulPostData = function (request, response, data) {
+module.exports.SuccessfulPostData = function (request, response, data) {
     response.writeHead(200, { 'Content-type': 'application/json' });
     if (data) {
         //response.end(JSON.stringify(Object.values(msg.rows[0])[0]));
@@ -15,13 +15,13 @@ exports.SuccessfulPostData = function (request, response, data) {
         response.end();
     }
 }
-exports.Error500 = function (request, response, err) {
+module.exports.Error500 = function (request, response, err) {
     response.writeHead(500, 'Internal server error!', { 'Content-type': 'application/json' });
     response.write(JSON.stringify({ error: `Internal server error: ${err}` }));
     response.end();
 }
 
-exports.Error400 = function (request, response, err) {
+module.exports.Error400 = function (request, response, err) {
     response.writeHead(400, 'Bad request!', { 'Content-type': 'application/json' });
     response.write(JSON.stringify({ error: `Bad request: ${err}` }));
     response.end();
@@ -45,15 +45,38 @@ function convertResultSetToObject(rs) {
 }
 
 
-function convertToHistoryObject(rs) {
-    var obj = {
-        id: rs.id,
-        status: rs.status,
-        createdAt: rs.created_at
+function convertToHistoryArr(rs) {
+    if(rs && rs.length>0)
+    {
+        var histArr = new Array();
+        
+        for(j=0;j<rs.length;j++)
+        {
+            histArr.push(convertToHistoryObject(rs[j]))
+        }
+        return histArr;
     }
-    return obj;
+    else
+    {
+        return rs;
+    }
+}
+function convertToHistoryObject(rs)
+{
+    if(rs)
+    {
+        var obj = {
+            id: rs.id,
+            status: rs.status,
+            createdAt: rs.created_at
+        }
+        return obj;
+    }
+    else{
+        return rs;
+    }
 }
 
 module.exports = {
-    convertResultSetToObject, convertToHistoryObject
+    convertResultSetToObject, convertToHistoryObject , convertToHistoryArr
 }

@@ -8,7 +8,7 @@ var logger = require('log4js').getLogger("orderRepository")
 var dbSettings = {
     "user": "postgres",
     "host": "localhost",
-    "database": "TechPOC",
+    "database": "GraphQL",
     "password": "root",
     "port": 5432
 }
@@ -121,7 +121,7 @@ function createStatusRecord(data, callback) {
  * @param {*} orderId 
  */
 function getOrderHistoryDetailsPromise(orderId) {
-    var query = "Select id,status,created_at from order_status where order_id = $1"
+    var query = "Select * from order_status where order_id = $1"
     logger.info("Got Inside ")
     return new Promise(function (resolve, reject) {
         pool.query(query, [orderId], function (err, data) {

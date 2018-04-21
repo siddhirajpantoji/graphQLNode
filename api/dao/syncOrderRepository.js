@@ -7,7 +7,7 @@ var logger = require('log4js').getLogger("syncOrderRepository")
 var dbSettings = {
     "user": "postgres",
     "host": "localhost",
-    "database": "TechPOC",
+    "database": "GraphQL",
     "password": "root",
     "port": 5432
 }
@@ -24,8 +24,9 @@ async function getAllOrders(order) {
         if (condition.valueArr.length > 0) {
             valuesArr = condition.valueArr;
             queryToExecute = queryToExecute.concat(condition.addQuery);
-            queryToExecute  = queryToExecute.concat(" order by id asc ")
+            
         }
+        queryToExecute = queryToExecute.concat(" order by id asc ")
         rows = await pool.query(queryToExecute, valuesArr);
         //console.log(JSON.stringify(rows))
     } catch (err) {
@@ -69,7 +70,7 @@ function getQueryCondition(order) {
 async function getCountOfOrders(order) {
     let rows;
     try {
-        queryToExecute = "Select count(*) from fixed_order order by id asc"
+        queryToExecute = "Select count(*) from fixed_order"
         var valuesArr = new Array();
         var condition = getQueryCondition(order);
         if (condition.valueArr.length > 0) {
@@ -90,7 +91,6 @@ async function createOrder(data) {
     var values = [data.base_currency, data.base_amount, data.quote_currency, data.quote_amount, data.rate, data.sender_id, data.beneficiary_id, data.status, data.purpose, data.created_at]
     try {
         rows = await pool.query(queryToExecute, values);
-
     }
     catch (err) {
         throw err;
@@ -106,24 +106,36 @@ async function createStatusRecord(data) {
     try {
         rows = await pool.query(queryToExecute, values);
     }
-    catch(err){
+    catch (err) {
         throw err
     }
     return rows.rows[0]
 }
 
-async function getHistoryDetailsForOrder(orderId){
+async function getHistoryDetailsForOrder(orderId) {
     let rows
-    var queryToExecute = "Select * from order_status where order_id = $1 order by id asc "
+    var queryToExecute = "Select * from order_status where order_id="+orderId 
     var values = [orderId]
     try {
-        rows = await pool.query(queryToExecute, values);
+        rows = await pool.query(queryToExecute);
     }
-    catch(err){
+    catch (err) {
         throw err
     }
     return rows.rows
 }
+
+async function updateOrderStatus(order){
+    var queryToExecute = "UPDATE fixed_order set  status = $1 , updated_at = $2 where id = $3 RETURNING *"
+    var values = [order.status, new Date(), order.id]
+    try {
+        rows = await pool.query(queryToExecute, values);
+    }
+    catch (err) {
+        throw err
+    }
+    return rows.rows[0]
+}
 module.exports = {
-    getAllOrders, getCountOfOrders, createOrder, createStatusRecord, getHistoryDetailsForOrder
+    getAllOrders, getCountOfOrders, createOrder, createStatusRecord, getHistoryDetailsForOrder ,updateOrderStatus
 }
