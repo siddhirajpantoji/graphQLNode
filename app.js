@@ -66,13 +66,14 @@ var schema = buildSchema(`
 var root = {
     getOrdersBy: function (args) {
         console.log(args)
-        service.getAllOrderPromise(args.id, args.status, args.senderId, args.beneficiaryId).then(result => {
-            logger.info("Result ")
-            return result;
-        }).catch(err => {
-            throw err;
-            // return err;
-        })
+        return  service.getAllOrderSync(args.id, args.status, args.senderId, args.beneficiaryId);
+        // service.getAllOrderPromise(args.id, args.status, args.senderId, args.beneficiaryId).then(result => {
+        //     logger.info("Result ")
+        //     return result;
+        // }).catch(err => {
+        //     throw err;
+        //     // return err;
+        // })
 
     },
     getOrderCount: function (args) {

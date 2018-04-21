@@ -1,6 +1,8 @@
 
 const daoLayer = require('../dao/orderRepository')
+const syncDao = require('../dao/syncOrderRepository')
 const logger = require('log4js').getLogger("OrderService");
+const utils = require('../utils/utils')
 const rate = 2.3;
 function getSingleRecord(recordId, callback) {
     logger.debug("Inside service With RecordID " + recordId)
@@ -191,7 +193,40 @@ function updateOrderPromise(orderId, Status) {
         reject(err)
     });
 }
+
+async function getAllOrderSync(id, status, senderId, beneficiaryId) {
+    var order = {
+        id: id,
+        status: status,
+        beneficiaryId: beneficiaryId,
+        senderId: senderId
+    }
+    var result = await syncDao.getAllOrders(order)
+    logger.info(result);
+    if (result && result.length > 0) {
+        var output = new Array()
+        for (i = 0; i < result.length; i++) {
+            var single = utils.convertResultSetToObject(result[i]);
+            var history = await syncDao.getHistoryDetailsForOrder(single.id)
+            if (history && history.length > 0) {
+                var histArr = new Array();
+                for ( j = 0; j < history.length; j++ ) {
+                    histArr.push(utils.convertToHistoryObject(history[j]))
+                }
+                single.history = histArr;       
+            }
+            output.push(single)
+        }
+        return output;
+    }
+    else {
+        return result;
+
+    }
+}
+
 module.exports = {
     getSingleRecord, createOrder, getSingleRecordPromise,
-    getAllOrderPromise, getOrderCountPromise, createOrderPromise, updateOrderPromise
+    getAllOrderPromise, getOrderCountPromise, createOrderPromise, updateOrderPromise,
+    getAllOrderSync
 }
