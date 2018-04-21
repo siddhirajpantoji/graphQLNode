@@ -12,15 +12,16 @@ function getSingleRecord(recordId, callback) {
 
 function getSingleRecordPromise(recordId) {
     logger.debug("Inside service With RecordID " + recordId)
-    return new Promise(function(resolve,reject){
-        daoLayer.getOrderHistoryDetailsPromise(recordId).then(function(record){
+    return new Promise(function (resolve, reject) {
+        daoLayer.getOrderHistoryDetailsPromise(recordId).then(function (record) {
+            daoLayer.get
             resolve(record)
-        }).catch(function(err){
+        }).catch(function (err) {
             reject(err)
             logger.error("Error in Single Record Promise")
         });
     })
-        
+
     // })
     // var recordPromise = daoLayer.getOrderHistoryDetailsPromise(recordId);
     // recordPromise.then(function (result) {
@@ -67,36 +68,135 @@ function createOrder(baseCurrency, quoteCurrency, baseAmount, senderId, benefici
 
     });
 }
-function getAllOrderPromise(id, status, senderId, beneficiaryId){
+function getAllOrderPromise(id, status, senderId, beneficiaryId) {
     var order = {
-        id:id,
-        status:status,
-        beneficiaryId:beneficiaryId,
-        senderId:senderId
+        id: id,
+        status: status,
+        beneficiaryId: beneficiaryId,
+        senderId: senderId
     }
-    return new Promise(function(resolve,reject){
-        daoLayer.getAllOrderDetailsPromise(order).then(data =>{
-            resolve(data)
-        }).catch(err=>{
+    return new Promise(function (resolve, reject) {
+        daoLayer.getAllOrderDetailsPromise(order).then(data => {
+            if (data && data.length > 0) {
+                // Loop for getting history
+                promises = data.map(single => {
+                    return new Promise(function (resolve2, reject2) {
+                        logger.info("Inside Order history Call ")
+                        daoLayer.getOrderHistoryDetailsPromise(single.id).then(histData => {
+                            single.history = histData;
+                            logger.info(single);
+                            resolve2(single)
+                        }).catch(err => {
+                            reject2(err);
+                        })
+                    }
+                    );
+                })
+                Promise.all(promises).then(finalData => {
+                    logger.info(finalData)
+                    resolve(finalData)
+                })
+                // for(i =0 ; i<data.length; i++)
+                // {
+                //    var hist1 = daoLayer.getOrderHistoryDetailsPromise(data[i].id).then(hist => {
+                //         return hist;
+                //         //data[i].history = history
+                //     }).catch(err=>{
+                //         logger.error("Getting history details ", err);
+                //          //reject(err);
+                //     })
+                //     logger.info(hist1)
+                // }
+            }
+
+        }).catch(err => {
             reject(err);
         })
     })
 }
 
-function getOrderCountPromise(id, status, senderId, beneficiaryId){
+function getOrderCountPromise(id, status, senderId, beneficiaryId) {
     var order = {
-        id:id,
-        status:status,
-        beneficiaryId:beneficiaryId,
-        senderId:senderId
+        id: id,
+        status: status,
+        beneficiaryId: beneficiaryId,
+        senderId: senderId
     }
-    return new Promise(function(resolve,reject){
-        daoLayer.getAllOrderCountPromise(order).then(data =>{
+    return new Promise(function (resolve, reject) {
+        daoLayer.getAllOrderCountPromise(order).then(data => {
             resolve(data)
-        }).catch(err=>{
+        }).catch(err => {
             reject(err);
         })
     })
 }
-module.exports = { getSingleRecord, createOrder , getSingleRecordPromise,
-     getAllOrderPromise, getOrderCountPromise }
+function createOrderPromise(baseCurrency, quoteCurrency, baseAmount, senderId, beneficiaryId, purpose) {
+    var newData = {
+        base_currency: baseCurrency,
+        base_amount: baseAmount,
+        quote_currency: quoteCurrency,
+        quote_amount: (baseAmount * rate),
+        rate: rate,
+        sender_id: senderId,
+        beneficiary_id: beneficiaryId,
+        status: "CREATED",
+        purpose: purpose,
+        created_at: new Date()
+    }
+    return new Promise(function (resolve, reject) {
+        daoLayer.createNewOrderPromise(newData).then(order => {
+            var orderStatus = {
+                status: order.status,
+                order_id: order.id,
+                created_at: new Date()
+            }
+            daoLayer.createStatusRecordPromise(orderStatus).then(statusRecord => {
+                order.history = new Array();
+                order.history.push(statusRecord);
+                resolve(order);
+            }).catch(err => {
+                reject(err)
+            })
+        }).catch(err => {
+            reject(err);
+        })
+    });
+}
+
+function updateOrderPromise(orderId, Status) {
+
+    return new Promise(function (resolve, reject) {
+        var order = {
+            status: Status,
+            id: orderId
+        }
+        daoLayer.udpateOrderStatusPromise(order).then(order1 => {
+            var orderStatus = {
+                status: order1.status,
+                order_id: order1.id,
+                created_at: new Date()
+            }
+            daoLayer.createStatusRecordPromise(orderStatus).then(orderStatus1 => {
+                daoLayer.getOrderHistoryDetailsPromise(order1.id).then(history1 => {
+                    var historys = new Array();
+                    historys.push(history1)
+                    order1.history = historys
+                    resolve(order1);
+                })
+            }).catch(err => {
+                logger.error("Exception ", err)
+                reject(err)
+            })
+        }).catch(err => {
+            logger.error("Exception ", err)
+            reject(err)
+        })
+    }).catch(err => {
+        logger.error("Exception ", err)
+        reject(err)
+    });
+}
+module.exports = {
+    getSingleRecord, createOrder, getSingleRecordPromise,
+    getAllOrderPromise, getOrderCountPromise, createOrderPromise, updateOrderPromise
+}

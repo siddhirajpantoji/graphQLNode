@@ -128,6 +128,7 @@ function getOrderHistoryDetailsPromise(orderId) {
                 reject(err);
             }
             else {
+               // return data.rows;
                 resolve(data.rows);
             }
             
@@ -191,6 +192,7 @@ function getAllOrderDetailsPromise(order) {
                 reject(err)
             }
             else{
+
                 resolve(result.rows);
             }
         });
@@ -218,6 +220,7 @@ function getAllOrderCountPromise(order) {
         });
     }); 
 }
+
 function getQueryCondition(order){
     var queryArr = new Array();
     var valuesArr = new Array();
@@ -251,6 +254,24 @@ function getQueryCondition(order){
         "valueArr":valuesArr
     }
 }
+function udpateOrderStatusPromise(order){
+    var queryToExecute = "UPDATE fixed_order set  status = $1 , updated_at = $2 where id = $3 RETURNING *"
+    var values = [order.status, new Date(), order.id]
+    return new Promise(function(resolve,reject){
+        pool.query(queryToExecute, values, function (err, data) {
+            if (err) {
+                logger.error("Error While Updating ", err);
+                reject(err);
+            }
+            else{
+                resolve(data.rows[0])
+            }
+            //return callback(data.rows[0]);
+        }
+        );
+    });
+    //const queryResult =    
+}
 module.exports = {
     getOrderHistoryDetails,
     getOrderDetails,
@@ -258,5 +279,5 @@ module.exports = {
     createStatusRecord,
     createNewOrder,
     getOrderHistoryDetailsPromise, createNewOrderPromise, createStatusRecordPromise,
-    getAllOrderDetailsPromise , getAllOrderCountPromise
+    getAllOrderDetailsPromise , getAllOrderCountPromise, udpateOrderStatusPromise
 }

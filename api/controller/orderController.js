@@ -30,9 +30,14 @@ function createOrder(req, res, next) {
         beneficiaryId:req.body.beneficiaryId,
         purpose:req.body.purpose
     }
-    service.createOrder(data.baseCurrency,data.quoteCurrency,data.baseAmount, data.senderId, data.beneficiaryId, data.purpose, function(resullt){
-        utils.SuccessfulPostData(req,res,resullt);
+    service.createOrderPromise(data.baseCurrency,data.quoteCurrency,data.baseAmount, data.senderId, data.beneficiaryId, data.purpose).then(order=>{
+        utils.SuccessfulPostData(req,res,order);
+    }).catch(err=>{
+        utils.Error500(req,res,err)
     })
+    // service.createOrder(data.baseCurrency,data.quoteCurrency,data.baseAmount, data.senderId, data.beneficiaryId, data.purpose, function(resullt){
+    //     utils.SuccessfulPostData(req,res,resullt);
+    // })
     // service.getSingleRecord(id, function(resullt){
     //     utils.SuccessfulPostData(req,res,resullt);
     // })
@@ -53,7 +58,7 @@ function filterAllRecords(req,res,next){
 }
 
 function countAllRecords(req,res,next){
-    logger.debug("Inisde filterAllRecords")
+    logger.debug("Inisde countAllRecords")
     var data = {
         id:req.body.id,
         status:req.body.status,
@@ -67,4 +72,19 @@ function countAllRecords(req,res,next){
         utils.Error500(req,res,err)
     })
 }
-module.exports = { getSingleRecord , createOrder, filterAllRecords, countAllRecords }
+
+function updateOrderStatus(req,res,next)
+{
+    logger.debug("Inisde updateOrderStatus")
+    var data = {
+        id:req.body.id,
+        status:req.body.status
+    }
+    logger.debug("Inisde countAllRecords")
+    service.updateOrderPromise(data.id, data.status).then(result=>{
+        utils.SuccessfulPostData(req,res,result);
+    }).catch(err=>{
+        utils.Error500(req,res,err)
+    })
+}
+module.exports = { getSingleRecord , createOrder, filterAllRecords, countAllRecords, updateOrderStatus }

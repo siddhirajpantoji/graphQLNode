@@ -5,4 +5,6 @@ router.get('/',orderController.getSingleRecord);
 router.post('/',orderController.createOrder);
 router.post('/all',orderController.filterAllRecords);
 router.post('/count',orderController.countAllRecords);
+router.put('/',orderController.updateOrderStatus)
+
 module.exports = router;
