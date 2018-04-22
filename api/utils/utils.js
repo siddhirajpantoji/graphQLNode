@@ -1,5 +1,5 @@
 const messages = require('../constants/constants')
-module.exports.SuccessfulPostData = function (request, response, data) {
+function SuccessfulPostData (request, response, data) {
     response.writeHead(200, { 'Content-type': 'application/json' });
     if (data) {
         //response.end(JSON.stringify(Object.values(msg.rows[0])[0]));
@@ -15,13 +15,13 @@ module.exports.SuccessfulPostData = function (request, response, data) {
         response.end();
     }
 }
-module.exports.Error500 = function (request, response, err) {
+function Error500 (request, response, err) {
     response.writeHead(500, 'Internal server error!', { 'Content-type': 'application/json' });
     response.write(JSON.stringify({ error: `Internal server error: ${err}` }));
     response.end();
 }
 
-module.exports.Error400 = function (request, response, err) {
+function Error400 (request, response, err) {
     response.writeHead(400, 'Bad request!', { 'Content-type': 'application/json' });
     response.write(JSON.stringify({ error: `Bad request: ${err}` }));
     response.end();
@@ -33,11 +33,12 @@ function convertResultSetToObject(rs) {
         baseCurrency: rs.base_currency,
         quoteCurrency: rs.quote_currency,
         quoteAmount: rs.quote_amount,
+        baseAmount:rs.base_amount,
         senderId: rs.sender_id,
         beneficiaryId: rs.beneficiary_id,
         purpose: rs.purpose,
-        createdAt: rs.craeted_at,
-        updatedAt: rs.updatedAt,
+        createdAt: rs.created_at,
+        updatedAt: rs.updated_at,
         rate: rs.rate,
         status: rs.status
     }
@@ -78,5 +79,6 @@ function convertToHistoryObject(rs)
 }
 
 module.exports = {
-    convertResultSetToObject, convertToHistoryObject , convertToHistoryArr
+    convertResultSetToObject, convertToHistoryObject , convertToHistoryArr ,SuccessfulPostData
+    ,Error500 ,Error400
 }
