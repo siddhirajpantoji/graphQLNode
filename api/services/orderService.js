@@ -95,20 +95,10 @@ function getAllOrderPromise(id, status, senderId, beneficiaryId) {
                 Promise.all(promises).then(finalData => {
                     logger.info(finalData)
                     resolve(finalData)
+                }).catch(err=>{
+                    reject(err)
                 })
-                // for(i =0 ; i<data.length; i++)
-                // {
-                //    var hist1 = daoLayer.getOrderHistoryDetailsPromise(data[i].id).then(hist => {
-                //         return hist;
-                //         //data[i].history = history
-                //     }).catch(err=>{
-                //         logger.error("Getting history details ", err);
-                //          //reject(err);
-                //     })
-                //     logger.info(hist1)
-                // }
             }
-
         }).catch(err => {
             reject(err);
         })
@@ -144,6 +134,10 @@ function createOrderPromise(baseCurrency, quoteCurrency, baseAmount, senderId, b
         created_at: new Date()
     }
     return new Promise(function (resolve, reject) {
+        if(!newData.base_amount || !newData.base_currency || !newData.quote_currency)
+        {
+            reject("Required Fields baseCurrency,quoteCurrency , baseAmount")
+        }
         daoLayer.createNewOrderPromise(newData).then(order => {
             order  = utils.convertResultSetToObject(order)
             var orderStatus = {
