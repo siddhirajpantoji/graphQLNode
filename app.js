@@ -65,18 +65,45 @@ var schema = buildSchema(`
 
 var root = {
     getOrdersBy: function (args) {
-        
-        return  service.getAllOrderSync(args.id, args.status, args.senderId, args.beneficiaryId);
+        return new Promise(function(resolve,reject){
+            service.getAllOrderPromise(args.id, args.status, args.senderId, args.beneficiaryId).then(data=>{
+                resolve(data)
+            }).catch(err => {
+                reject(err)
+            })
+        })
+        //service.getAllOrderPromise(args.id, args.status, args.senderId, args.beneficiaryId)
+        //return  service.getAllOrderSync(args.id, args.status, args.senderId, args.beneficiaryId);
     },
     getOrderCount: function (args) {
-        return service.getAllOrderCountSync(args.id, args.status, args.senderId, args.beneficiaryId);
+        return new Promise(function(resolve,reject){
+            service.getOrderCountPromise(args.id, args.status, args.senderId, args.beneficiaryId).then(data=>{      
+                resolve(data[0].count)
+            }).catch(err=>{
+                reject(err)
+            })    
+        })
+        //return service.getAllOrderCountSync(args.id, args.status, args.senderId, args.beneficiaryId);
     },
     newOrder: function (args) {
-        
-        return service.createOrderSync(args.baseCurrency, args.quoteCurrency, args.baseAmount, args.senderId, args.beneficiaryId, args.purpose);
+        return new Promise(function(resolve,reject){
+            service.createOrderPromise(args.baseCurrency, args.quoteCurrency, args.baseAmount, args.senderId, args.beneficiaryId, args.purpose).then(data=>{
+               resolve(data) 
+            }).catch(err=>{
+                reject(err)
+            })
+        });
+        //return service.createOrderSync(args.baseCurrency, args.quoteCurrency, args.baseAmount, args.senderId, args.beneficiaryId, args.purpose);
     },
     updateOrderStatus: function (args) {
-        return service.updateOrderSync(args.id,args.status);
+        return new Promise(function(resolve,reject){
+            service.updateOrderPromise(args.id,args.status).then(data=>{
+                resolve(data);
+            }).catch(err=>{
+                reject(err)
+            })
+        })
+        // return service.updateOrderSync(args.id,args.status);
     }
 }
 app.use('/graphql', express_graphql({
@@ -89,7 +116,7 @@ app.use((req, res, next) => {
     const error = new Error('Resource not found!');
     error.status = 404;
     utils.Error400(req, res, error);
-    // next(error);
+    next(error);
 })
 
 

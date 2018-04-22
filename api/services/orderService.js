@@ -77,9 +77,12 @@ function getAllOrderPromise(id, status, senderId, beneficiaryId) {
                 // Loop for getting history
                 logger.info("GOT Data ")
                 promises = data.map(single => {
+                    single = utils.convertResultSetToObject(single);
                     return new Promise(function (resolve2, reject2) {
                         logger.info("Inside Order history Call ")
                         daoLayer.getOrderHistoryDetailsPromise(single.id).then(histData => {
+                            var histData  = histData;
+                            histData = utils.convertToHistoryArr(histData)
                             single.history = histData;
                             logger.info(single);
                             resolve2(single)
@@ -142,12 +145,14 @@ function createOrderPromise(baseCurrency, quoteCurrency, baseAmount, senderId, b
     }
     return new Promise(function (resolve, reject) {
         daoLayer.createNewOrderPromise(newData).then(order => {
+            order  = utils.convertResultSetToObject(order)
             var orderStatus = {
                 status: order.status,
                 order_id: order.id,
                 created_at: new Date()
             }
             daoLayer.createStatusRecordPromise(orderStatus).then(statusRecord => {
+                statusRecord = utils.convertToHistoryObject(statusRecord);
                 order.history = new Array();
                 order.history.push(statusRecord);
                 resolve(order);
@@ -168,6 +173,7 @@ function updateOrderPromise(orderId, Status) {
             id: orderId
         }
         daoLayer.udpateOrderStatusPromise(order).then(order1 => {
+            order1 = utils.convertResultSetToObject(order1)
             var orderStatus = {
                 status: order1.status,
                 order_id: order1.id,
@@ -175,8 +181,7 @@ function updateOrderPromise(orderId, Status) {
             }
             daoLayer.createStatusRecordPromise(orderStatus).then(orderStatus1 => {
                 daoLayer.getOrderHistoryDetailsPromise(order1.id).then(history1 => {
-                    var historys = new Array();
-                    historys.push(history1)
+                    var historys = utils.convertToHistoryArr(history1);
                     order1.history = historys
                     resolve(order1);
                 })
