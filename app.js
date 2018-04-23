@@ -67,6 +67,7 @@ var root = {
     getOrdersBy: function (args) {
         return new Promise(function(resolve,reject){
             service.getAllOrderPromise(args.id, args.status, args.senderId, args.beneficiaryId).then(data=>{
+                logger.info("")
                 resolve(data)
             }).catch(err => {
                 reject(err)
@@ -111,25 +112,25 @@ app.use('/graphql', express_graphql({
     rootValue: root,
     graphiql: true
 }));
-app.use((req, res, next) => {
-    logger.error("Resource Not Found")
-    const error = new Error('Resource not found!');
-    error.status = 404;
-    utils.Error400(req, res, error);
-    next(error);
-})
+// app.use((req, res, next) => {
+//     logger.error("Resource Not Found")
+//     const error = new Error('Resource not found!');
+//     error.status = 404;
+//     utils.Error400(req, res, error);
+//     next(error);
+// })
 
 
-app.use((error, req, res, next) => {
+// app.use((error, req, res, next) => {
 
-    logger.error("Exception occured in Global ", error)
-    // res.status(error.status || 500);
-    // res.json({
-    //     error: {
-    //         message: error.message
-    //     }
-    // });
-    utils.Error500(req, res, error);
-})
+//     logger.error("Exception occured in Global ", error)
+//     // res.status(error.status || 500);
+//     // res.json({
+//     //     error: {
+//     //         message: error.message
+//     //     }
+//     // });
+//     utils.Error500(req, res, error);
+// })
 
 module.exports = app;

@@ -75,16 +75,16 @@ function getAllOrderPromise(id, status, senderId, beneficiaryId) {
         daoLayer.getAllOrderDetailsPromise(fixedorder).then(data => {
             if (data && data.length > 0) {
                 // Loop for getting history
-                logger.info("GOT Data ")
+                //logger.info("GOT Data ")
                 promises = data.map(single => {
                     single = utils.convertResultSetToObject(single);
                     return new Promise(function (resolve2, reject2) {
-                        logger.info("Inside Order history Call ")
+                      //  logger.info("Inside Order history Call ")
                         daoLayer.getOrderHistoryDetailsPromise(single.id).then(histData => {
                             var histData  = histData;
                             histData = utils.convertToHistoryArr(histData)
                             single.history = histData;
-                            logger.info(single);
+                       //     logger.info(single);
                             resolve2(single)
                         }).catch(err => {
                             reject2(err);
@@ -93,11 +93,14 @@ function getAllOrderPromise(id, status, senderId, beneficiaryId) {
                     );
                 })
                 Promise.all(promises).then(finalData => {
-                    logger.info(finalData)
+                   // logger.info(finalData)
                     resolve(finalData)
                 }).catch(err=>{
                     reject(err)
                 })
+            }
+            else{
+                resolve(new Array());
             }
         }).catch(err => {
             reject(err);
