@@ -16,7 +16,6 @@ function getSingleRecordPromise(recordId) {
     logger.debug("Inside service With RecordID " + recordId)
     return new Promise(function (resolve, reject) {
         daoLayer.getOrderHistoryDetailsPromise(recordId).then(function (record) {
-            daoLayer.get
             resolve(record)
         }).catch(function (err) {
             reject(err)

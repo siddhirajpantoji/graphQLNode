@@ -57,8 +57,8 @@ var schema = buildSchema(`
     }
     
      type Mutation {
-        newOrder(baseCurrency:String!,quoteCurrency:String!, baseAmount:Float,senderId:String,beneficiaryId:String,purpose:String) : Order!
-        updateOrderStatus(id:Int!,status:String):Order
+        newOrder(baseCurrency:String!,quoteCurrency:String!, baseAmount:Float!,senderId:String!,beneficiaryId:String!,purpose:String) : Order!
+        updateOrderStatus(id:Int!,status:String!):Order
     }`);
 
 
